@@ -62,12 +62,10 @@ import { useRouter, useRoute } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import {
   MdHome,
-  MdHelpOutline,
   MdChatbubbles,
-  MdCampaign,
+
   MdPerson,
-  MdVerified,
-  MdLogout,
+
 } from '@vicons/ionicons4'
 import { useUserStore } from '@/stores/user'
 import { getUnreadCount } from '@/api/message'
@@ -89,7 +87,7 @@ const menuOptions = [
   {
     label: '互助大厅',
     key: '/help',
-    icon: () => h(MdHelpOutline),
+    icon: () => h(MdPerson),
   },
   {
     label: '消息',
@@ -99,7 +97,7 @@ const menuOptions = [
   {
     label: '公告',
     key: '/announcements',
-    icon: () => h(MdCampaign),
+    icon: () => h(MdChatbubbles),
   },
   {
     label: '个人中心',
@@ -117,16 +115,17 @@ const userMenuOptions = [
   {
     label: '实名认证',
     key: 'verify',
-    icon: () => h(MdVerified),
+    icon: () => h(MdPerson),
   },
   {
     type: 'divider' as const,
     key: 'divider',
+     icon: () => h(MdPerson),
   },
   {
     label: '退出登录',
     key: 'logout',
-    icon: () => h(MdLogout),
+ icon: () => h(MdPerson),
   },
 ]
 

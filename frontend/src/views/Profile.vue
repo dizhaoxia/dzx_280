@@ -73,7 +73,7 @@
     <n-card title="快捷入口">
       <div class="grid grid-cols-3 gap-4">
         <n-button block @click="goVerify">
-          <template #icon><n-icon><MdVerified /></n-icon></template>
+        
           实名认证
         </n-button>
         <n-button block @click="goMyPosts">
@@ -81,7 +81,7 @@
           我的发布
         </n-button>
         <n-button block type="error" @click="handleLogout">
-          <template #icon><n-icon><MdLogout /></n-icon></template>
+         
           退出登录
         </n-button>
       </div>
@@ -93,7 +93,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage, type FormRules, type FormInst, type UploadFileInfo } from 'naive-ui'
-import { MdVerified, MdListBox, MdLogout } from '@vicons/ionicons4'
+import {  MdListBox } from '@vicons/ionicons4'
 import { useUserStore } from '@/stores/user'
 import { updateProfile } from '@/api/user'
 import { VERIFY_STATUS } from '@/types'
