@@ -52,6 +52,30 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '互助详情' },
       },
       {
+        path: 'borrow',
+        name: 'BorrowList',
+        component: () => import('@/views/BorrowList.vue'),
+        meta: { title: '物品借用' },
+      },
+      {
+        path: 'borrow/publish',
+        name: 'BorrowPublish',
+        component: () => import('@/views/BorrowPublish.vue'),
+        meta: { title: '登记物品' },
+      },
+      {
+        path: 'borrow/:id',
+        name: 'BorrowDetail',
+        component: () => import('@/views/BorrowDetail.vue'),
+        meta: { title: '物品详情' },
+      },
+      {
+        path: 'borrow/manage',
+        name: 'BorrowManage',
+        component: () => import('@/views/BorrowManage.vue'),
+        meta: { title: '借用管理' },
+      },
+      {
         path: 'messages',
         name: 'Messages',
         component: () => import('@/views/Messages.vue'),

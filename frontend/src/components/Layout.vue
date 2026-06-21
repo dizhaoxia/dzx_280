@@ -57,9 +57,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, h } from 'vue'
+import { ref, computed, onMounted, onUnmounted, h, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useMessage } from 'naive-ui'
+import { useMessage, useNotification } from 'naive-ui'
 import {
   MdHome,
   MdChatbubbles,
@@ -68,9 +68,11 @@ import {
   MdMegaphone,
   MdBusiness,
   MdPaper,
+  MdCube,
 } from '@vicons/ionicons4'
 import { useUserStore } from '@/stores/user'
 import { getUnreadCount } from '@/api/message'
+import { websocketService } from '@/utils/websocket'
 
 const router = useRouter()
 const route = useRoute()
@@ -79,6 +81,7 @@ const userStore = useUserStore()
 
 const collapsed = ref(false)
 const unreadCount = ref(0)
+const notification = useNotification()
 
 const isPropertyOrAdmin = computed(() => {
   const role = userStore.user?.role
@@ -96,6 +99,11 @@ const menuOptions = computed(() => {
       label: '互助大厅',
       key: '/help',
       icon: () => h(MdList),
+    },
+    {
+      label: '物品借用',
+      key: '/borrow',
+      icon: () => h(MdCube),
     },
     {
       label: '消息',
@@ -163,6 +171,7 @@ const userMenuOptions = [
 const activeMenu = computed(() => {
   const path = route.path
   if (path.startsWith('/help')) return '/help'
+  if (path.startsWith('/borrow')) return '/borrow'
   if (path.startsWith('/messages')) return '/messages'
   if (path.startsWith('/announcements') && !path.startsWith('/admin')) return '/announcements'
   if (path.startsWith('/profile') || path.startsWith('/verify')) return '/profile'
@@ -196,6 +205,8 @@ function goMessages() {
 }
 
 let pollTimer: any = null
+let systemNotificationUnsubscribe: (() => void) | null = null
+let conversationUnsubscribe: (() => void) | null = null
 
 async function fetchUnread() {
   try {
@@ -208,10 +219,31 @@ async function fetchUnread() {
 onMounted(() => {
   fetchUnread()
   pollTimer = setInterval(fetchUnread, 5000)
+
+  if (userStore.token) {
+    websocketService.connect()
+  }
+
+  systemNotificationUnsubscribe = websocketService.onSystemNotification((data: any) => {
+    nextTick(() => {
+      notification.info({
+        title: '系统通知',
+        content: data.content,
+        duration: 5000,
+      })
+    })
+    fetchUnread()
+  })
+
+  conversationUnsubscribe = websocketService.onConversationUpdate(() => {
+    fetchUnread()
+  })
 })
 
 onUnmounted(() => {
   if (pollTimer) clearInterval(pollTimer)
+  if (systemNotificationUnsubscribe) systemNotificationUnsubscribe()
+  if (conversationUnsubscribe) conversationUnsubscribe()
 })
 </script>
 

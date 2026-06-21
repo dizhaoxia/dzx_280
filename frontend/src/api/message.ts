@@ -8,7 +8,12 @@ export function getMessages(conversationId: number, params?: { page?: number; pa
   return request.get(`/message/${conversationId}/messages`, { params })
 }
 
-export function sendMessage(params: { receiverId: number; type?: string; content: string }) {
+export function sendMessage(params: {
+  receiverId: number
+  type?: string
+  content: string
+  duration?: number
+}) {
   return request.post('/message/send', params)
 }
 
@@ -26,6 +31,20 @@ export function uploadChatImage(formData: FormData) {
   })
 }
 
+export function uploadChatAudio(formData: FormData) {
+  return request.post('/message/upload-audio', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
+
 export function createOrGetConversation(targetUserId: number) {
   return request.post('/message/conversation', { targetUserId })
+}
+
+export function getOnlineUsers() {
+  return request.get('/message/online-users')
+}
+
+export function checkUserOnline(userId: number) {
+  return request.get(`/message/user-online/${userId}`)
 }

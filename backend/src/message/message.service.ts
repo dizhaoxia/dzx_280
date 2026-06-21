@@ -145,6 +145,7 @@ export class MessageService {
       type: dto.type || MessageType.TEXT,
       content: dto.content,
       isRead: false,
+      duration: dto.duration,
     });
 
     const savedMessage = await this.messageRepository.save(message);
@@ -230,5 +231,50 @@ export class MessageService {
     fs.writeFileSync(filepath, file.buffer);
 
     return { url: `/uploads/${filename}` };
+  }
+
+  async uploadAudio(userId: number, file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('请上传音频文件');
+    }
+
+    const uploadsDir = path.join(process.cwd(), 'uploads', 'audio');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const timestamp = Date.now();
+    const ext = path.extname(file.originalname) || '.webm';
+    const filename = `audio_${userId}_${timestamp}${ext}`;
+    const filepath = path.join(uploadsDir, filename);
+
+    fs.writeFileSync(filepath, file.buffer);
+
+    return { url: `/uploads/audio/${filename}` };
+  }
+
+  async sendSystemMessage(senderId: number | null, receiverId: number, content: string) {
+    const conversation = await this.createOrGetConversation(senderId || 0, receiverId).catch(() => null);
+    if (!conversation) return null;
+
+    const actualSenderId = senderId || 0;
+    const message = this.messageRepository.create({
+      conversationId: conversation.id,
+      senderId: actualSenderId,
+      receiverId: receiverId,
+      type: MessageType.SYSTEM,
+      content: content,
+      isRead: false,
+    });
+
+    const savedMessage = await this.messageRepository.save(message);
+
+    conversation.lastMessage = content;
+    conversation.lastMessageTime = new Date();
+    conversation.unreadCounts = conversation.unreadCounts || {};
+    conversation.unreadCounts[receiverId] = (conversation.unreadCounts[receiverId] || 0) + 1;
+    await this.conversationRepository.save(conversation);
+
+    return savedMessage;
   }
 }

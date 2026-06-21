@@ -13,6 +13,11 @@ export class SendMessageDto {
 
   @IsString()
   content: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  duration?: number;
 }
 
 export class GetMessagesDto {

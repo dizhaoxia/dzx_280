@@ -6,12 +6,16 @@ import { HelpModule } from './help/help.module';
 import { MessageModule } from './message/message.module';
 import { AnnouncementModule } from './announcement/announcement.module';
 import { BuildingModule } from './building/building.module';
+import { BorrowModule } from './borrow/borrow.module';
 import { User } from './user/entities/user.entity';
 import { Building } from './building/entities/building.entity';
 import { HelpPost } from './help/entities/help-post.entity';
 import { Conversation } from './message/entities/conversation.entity';
 import { Message } from './message/entities/message.entity';
 import { Announcement } from './announcement/entities/announcement.entity';
+import { Item } from './borrow/entities/item.entity';
+import { BorrowRequest } from './borrow/entities/borrow-request.entity';
+import { BorrowRecord } from './borrow/entities/borrow-record.entity';
 import { join } from 'path';
 
 @Module({
@@ -19,7 +23,17 @@ import { join } from 'path';
     TypeOrmModule.forRoot({
       type: 'better-sqlite3',
       database: join(process.cwd(), 'data.db'),
-      entities: [User, Building, HelpPost, Conversation, Message, Announcement],
+      entities: [
+        User,
+        Building,
+        HelpPost,
+        Conversation,
+        Message,
+        Announcement,
+        Item,
+        BorrowRequest,
+        BorrowRecord,
+      ],
       synchronize: true,
       logging: false,
     }),
@@ -29,6 +43,7 @@ import { join } from 'path';
     MessageModule,
     AnnouncementModule,
     BuildingModule,
+    BorrowModule,
   ],
 })
 export class AppModule {}

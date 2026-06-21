@@ -12,6 +12,8 @@ import { User } from '../../user/entities/user.entity';
 export enum MessageType {
   TEXT = 'text',
   IMAGE = 'image',
+  AUDIO = 'audio',
+  SYSTEM = 'system',
 }
 
 @Entity('messages')
@@ -52,6 +54,9 @@ export class Message {
 
   @Column({ default: false })
   isRead: boolean;
+
+  @Column({ nullable: true })
+  duration: number;
 
   @CreateDateColumn()
   createdAt: Date;

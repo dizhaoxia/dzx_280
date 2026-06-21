@@ -3,6 +3,14 @@
     <div class="flex-none w-[280px] border-r border-gray-200 bg-white flex flex-col h-full">
       <div class="h-14 px-4 flex items-center border-b border-gray-100 flex-none">
         <span class="text-base font-semibold text-gray-800">消息</span>
+        <span v-if="websocketService.isConnected.value" class="ml-auto flex items-center gap-1 text-xs text-green-500">
+          <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+          已连接
+        </span>
+        <span v-else class="ml-auto flex items-center gap-1 text-xs text-gray-400">
+          <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+          离线
+        </span>
       </div>
       <n-scrollbar class="flex-1 min-h-0">
         <div v-if="loading" class="p-4 flex justify-center">
@@ -19,22 +27,32 @@
             :class="{ 'bg-gray-50': currentConversationId === conv.id }"
             @click="handleClickConversation(conv.id)"
           >
-            <n-badge :value="getUnreadCount(conv)" :max="99" :show="getUnreadCount(conv) > 0">
-              <n-avatar round size="medium" :src="conv.targetUser?.avatar">
-                {{ conv.targetUser?.nickname?.charAt(0) || conv.targetUser?.phone?.slice(-4) }}
-              </n-avatar>
-            </n-badge>
+            <div class="relative flex-none">
+              <n-badge :value="getUnreadCount(conv)" :max="99" :show="getUnreadCount(conv) > 0">
+                <n-avatar round size="medium" :src="conv.targetUser?.avatar">
+                  {{ conv.targetUser?.nickname?.charAt(0) || conv.targetUser?.phone?.slice(-4) }}
+                </n-avatar>
+              </n-badge>
+              <span
+                v-if="isTargetOnline(conv.targetUser?.id)"
+                class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-white"
+              ></span>
+            </div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between">
                 <span class="font-medium text-sm text-gray-800 truncate">
                   {{ conv.targetUser?.nickname || conv.targetUser?.phone }}
+                  <span
+                    v-if="isTargetOnline(conv.targetUser?.id)"
+                    class="ml-1 text-xs text-green-500 font-normal"
+                  >[在线]</span>
                 </span>
                 <span class="text-xs text-gray-400 flex-none ml-2">
                   {{ formatTime(conv.lastMessageTime) }}
                 </span>
               </div>
               <p class="text-xs text-gray-500 mt-1 truncate">
-                {{ conv.lastMessage || '暂无消息' }}
+                {{ formatLastMessage(conv) }}
               </p>
             </div>
           </div>
@@ -67,6 +85,7 @@ import { MdChatbubbles } from '@vicons/ionicons4'
 import dayjs from 'dayjs'
 import { getConversations } from '@/api/message'
 import { useUserStore } from '@/stores/user'
+import { websocketService } from '@/utils/websocket'
 import type { Conversation } from '@/types'
 
 const router = useRouter()
@@ -84,23 +103,14 @@ const currentConversationId = computed(() => {
   return null
 })
 
-let pollTimer: any = null
-
-async function fetchConversations() {
-  try {
-    loading.value = true
-    const res: any = await getConversations()
-    conversations.value = res || []
-  } catch (e: any) {
-    message.error(e.message || '获取会话列表失败')
-  } finally {
-    loading.value = false
-  }
-}
-
 function getUnreadCount(conv: Conversation) {
   if (!conv.unreadCounts || !userStore.user) return 0
   return conv.unreadCounts[String(userStore.user.id)] || 0
+}
+
+function isTargetOnline(userId?: number) {
+  if (!userId) return false
+  return websocketService.isUserOnline(userId)
 }
 
 function formatTime(time?: string) {
@@ -116,9 +126,34 @@ function formatTime(time?: string) {
   return target.format('MM/DD')
 }
 
+function formatLastMessage(conv: Conversation) {
+  if (!conv.lastMessage) return '暂无消息'
+  if (conv.lastMessage.startsWith('/uploads/')) {
+    if (conv.lastMessage.includes('/audio/')) {
+      return '[语音消息]'
+    }
+    return '[图片消息]'
+  }
+  return conv.lastMessage
+}
+
+async function fetchConversations() {
+  try {
+    loading.value = true
+    const res: any = await getConversations()
+    conversations.value = res || []
+  } catch (e: any) {
+    message.error(e.message || '获取会话列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
 function handleClickConversation(id: number) {
   router.push(`/messages/${id}`)
 }
+
+let conversationUnsubscribe: (() => void) | null = null
 
 watch(
   () => route.params.conversationId,
@@ -129,11 +164,17 @@ watch(
 
 onMounted(() => {
   fetchConversations()
-  pollTimer = setInterval(fetchConversations, 5000)
+  websocketService.connect()
+
+  conversationUnsubscribe = websocketService.onConversationUpdate((data: any) => {
+    conversations.value = data || []
+  })
 })
 
 onUnmounted(() => {
-  if (pollTimer) clearInterval(pollTimer)
+  if (conversationUnsubscribe) {
+    conversationUnsubscribe()
+  }
 })
 </script>
 
@@ -147,4 +188,3 @@ onUnmounted(() => {
   opacity: 0;
 }
 </style>
-
