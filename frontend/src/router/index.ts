@@ -56,12 +56,14 @@ const routes: RouteRecordRaw[] = [
         name: 'Messages',
         component: () => import('@/views/Messages.vue'),
         meta: { title: '消息' },
-      },
-      {
-        path: 'messages/:conversationId',
-        name: 'Chat',
-        component: () => import('@/views/Chat.vue'),
-        meta: { title: '聊天' },
+        children: [
+          {
+            path: ':conversationId',
+            name: 'Chat',
+            component: () => import('@/views/Chat.vue'),
+            meta: { title: '聊天' },
+          },
+        ],
       },
       {
         path: 'announcements',

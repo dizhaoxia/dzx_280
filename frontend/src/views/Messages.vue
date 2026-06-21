@@ -1,10 +1,10 @@
 <template>
-  <div class="h-full flex">
-    <div class="flex-none w-[280px] border-r border-gray-200 bg-white flex flex-col">
-      <div class="h-14 px-4 flex items-center border-b border-gray-100">
+  <div class="h-full flex overflow-hidden">
+    <div class="flex-none w-[280px] border-r border-gray-200 bg-white flex flex-col h-full">
+      <div class="h-14 px-4 flex items-center border-b border-gray-100 flex-none">
         <span class="text-base font-semibold text-gray-800">消息</span>
       </div>
-      <n-scrollbar class="flex-1">
+      <n-scrollbar class="flex-1 min-h-0">
         <div v-if="loading" class="p-4 flex justify-center">
           <n-spin size="small" />
         </div>
@@ -41,19 +41,26 @@
         </div>
       </n-scrollbar>
     </div>
-    <div class="flex-1 flex items-center justify-center bg-gray-50">
-      <div class="text-center">
-        <n-icon size="48" class="text-gray-300 mb-3">
-          <MdChatbubbles />
-        </n-icon>
-        <p class="text-gray-400 text-sm">请选择一个会话开始聊天</p>
-      </div>
+    <div class="flex-1 min-w-0 h-full overflow-hidden">
+      <router-view v-slot="{ Component, route: currentRoute }">
+        <transition name="fade" mode="out-in">
+          <component v-if="Component" :is="Component" :key="currentRoute.fullPath" />
+          <div v-else class="h-full flex items-center justify-center bg-gray-50">
+            <div class="text-center">
+              <n-icon size="48" class="text-gray-300 mb-3">
+                <MdChatbubbles />
+              </n-icon>
+              <p class="text-gray-400 text-sm">请选择一个会话开始聊天</p>
+            </div>
+          </div>
+        </transition>
+      </router-view>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import { MdChatbubbles } from '@vicons/ionicons4'
@@ -113,6 +120,13 @@ function handleClickConversation(id: number) {
   router.push(`/messages/${id}`)
 }
 
+watch(
+  () => route.params.conversationId,
+  (newId) => {
+    if (newId) fetchConversations()
+  }
+)
+
 onMounted(() => {
   fetchConversations()
   pollTimer = setInterval(fetchConversations, 5000)
@@ -122,3 +136,15 @@ onUnmounted(() => {
   if (pollTimer) clearInterval(pollTimer)
 })
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
+

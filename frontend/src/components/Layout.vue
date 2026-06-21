@@ -45,10 +45,10 @@
           </div>
         </div>
       </n-layout-header>
-      <n-layout-content content-style="padding: 0">
-        <router-view v-slot="{ Component }">
-          <transition name="fade" mode="out-in">
-            <component :is="Component" />
+      <n-layout-content content-style="padding: 0" style="min-height: 0; height: calc(100vh - 64px); overflow: hidden;">
+        <router-view v-slot="{ Component }" style="height: 100%; display: block;">
+          <transition name="fade" mode="out-in" style="height: 100%; display: block;">
+            <component :is="Component" style="height: 100%;" />
           </transition>
         </router-view>
       </n-layout-content>

@@ -1,13 +1,10 @@
 <template>
-  <div class="h-full flex flex-col bg-gray-50">
+  <div class="h-full flex flex-col min-h-0 overflow-hidden">
     <div class="h-14 px-4 flex items-center bg-white border-b border-gray-200 flex-none">
-      <n-button text @click="goBack" class="mr-3">
-        <template #icon><n-icon><MdArrowBack /></n-icon></template>
-      </n-button>
       <n-avatar round size="medium" :src="targetUser?.avatar">
         {{ targetUser?.nickname?.charAt(0) || targetUser?.phone?.slice(-4) }}
       </n-avatar>
-      <div class="ml-3">
+      <div class="ml-3 flex-1">
         <div class="flex items-center gap-2">
           <span class="font-medium text-gray-800">
             {{ targetUser?.nickname || targetUser?.phone }}
@@ -25,9 +22,12 @@
       </div>
     </div>
 
-    <n-scrollbar ref="scrollbarRef" class="flex-1 p-4">
+    <n-scrollbar ref="scrollbarRef" class="flex-1 p-4 min-h-0">
       <div v-if="loading" class="h-full flex items-center justify-center">
         <n-spin />
+      </div>
+      <div v-else-if="messages.length === 0" class="h-full flex items-center justify-center">
+        <p class="text-gray-400 text-sm">暂无消息，开始聊天吧</p>
       </div>
       <div v-else class="flex flex-col gap-4">
         <div
@@ -123,7 +123,7 @@
 import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useMessage, type UploadCustomRequestOptions } from 'naive-ui'
-import { MdArrowBack, MdImage } from '@vicons/ionicons4'
+import { MdImage } from '@vicons/ionicons4'
 import dayjs from 'dayjs'
 import { getMessages, sendMessage, markAsRead, uploadChatImage } from '@/api/message'
 import { getConversations } from '@/api/message'
@@ -274,10 +274,6 @@ function previewImage(src: string) {
       previewImageRef.value.click()
     }
   })
-}
-
-function goBack() {
-  router.push('/messages')
 }
 
 watch(
