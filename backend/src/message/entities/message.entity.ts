@@ -1,0 +1,58 @@
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
+import { Conversation } from './conversation.entity';
+import { User } from '../../user/entities/user.entity';
+
+export enum MessageType {
+  TEXT = 'text',
+  IMAGE = 'image',
+}
+
+@Entity('messages')
+export class Message {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  conversationId: number;
+
+  @ManyToOne(() => Conversation, (conv) => conv.messages)
+  @JoinColumn({ name: 'conversationId' })
+  conversation: Conversation;
+
+  @Column()
+  senderId: number;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'senderId' })
+  sender: User;
+
+  @Column()
+  receiverId: number;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'receiverId' })
+  receiver: User;
+
+  @Column({
+    type: 'enum',
+    enum: MessageType,
+    default: MessageType.TEXT,
+  })
+  type: MessageType;
+
+  @Column({ type: 'text' })
+  content: string;
+
+  @Column({ default: false })
+  isRead: boolean;
+
+  @CreateDateColumn()
+  createdAt: Date;
+}

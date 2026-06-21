@@ -1,0 +1,134 @@
+<template>
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <n-card title="注册" class="w-full max-w-md">
+      <n-form
+        ref="formRef"
+        :model="formValue"
+        :rules="rules"
+        label-placement="top"
+        @submit="handleSubmit"
+      >
+        <n-form-item label="手机号" path="phone">
+          <n-input v-model:value="formValue.phone" placeholder="请输入手机号" />
+        </n-form-item>
+        <n-form-item label="密码" path="password">
+          <n-input
+            v-model:value="formValue.password"
+            type="password"
+            placeholder="请输入密码"
+            show-password-on="click"
+          />
+        </n-form-item>
+        <n-form-item label="确认密码" path="confirmPassword">
+          <n-input
+            v-model:value="formValue.confirmPassword"
+            type="password"
+            placeholder="请再次输入密码"
+            show-password-on="click"
+          />
+        </n-form-item>
+        <n-form-item label="昵称（可选）" path="nickname">
+          <n-input v-model:value="formValue.nickname" placeholder="请输入昵称" />
+        </n-form-item>
+        <n-form-item>
+          <n-button type="primary" block :loading="loading" html-type="submit">
+            注册
+          </n-button>
+        </n-form-item>
+      </n-form>
+      <div class="text-center text-sm text-gray-500">
+        已有账号？
+        <router-link to="/login" class="text-green-500 hover:text-green-600">
+          去登录
+        </router-link>
+      </div>
+    </n-card>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { useMessage, type FormRules, type FormInst } from 'naive-ui'
+import { useUserStore } from '@/stores/user'
+
+const router = useRouter()
+const message = useMessage()
+const userStore = useUserStore()
+
+const formRef = ref<FormInst | null>(null)
+const loading = ref(false)
+
+const formValue = reactive({
+  phone: '',
+  password: '',
+  confirmPassword: '',
+  nickname: '',
+})
+
+const rules: FormRules = {
+  phone: [
+    {
+      required: true,
+      message: '请输入手机号',
+      trigger: 'blur',
+    },
+    {
+      pattern: /^1[3-9]\d{9}$/,
+      message: '手机号格式不正确',
+      trigger: 'blur',
+    },
+  ],
+  password: [
+    {
+      required: true,
+      message: '请输入密码',
+      trigger: 'blur',
+    },
+    {
+      min: 6,
+      max: 20,
+      message: '密码长度为6-20位',
+      trigger: 'blur',
+    },
+  ],
+  confirmPassword: [
+    {
+      required: true,
+      message: '请再次输入密码',
+      trigger: 'blur',
+    },
+    {
+      validator: (_rule, value) => {
+        if (value !== formValue.password) {
+          return new Error('两次输入的密码不一致')
+        }
+        return true
+      },
+      trigger: 'blur',
+    },
+  ],
+}
+
+async function handleSubmit() {
+  try {
+    await formRef.value?.validate()
+  } catch (e) {
+    return
+  }
+  loading.value = true
+  try {
+    await userStore.handleRegister(
+      formValue.phone,
+      formValue.password,
+      formValue.nickname || undefined
+    )
+    message.success('注册成功')
+    router.push('/')
+  } catch (e: any) {
+    message.error(e?.message || '注册失败')
+  } finally {
+    loading.value = false
+  }
+}
+</script>
