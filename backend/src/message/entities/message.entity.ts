@@ -31,14 +31,14 @@ export class Message {
   @Column()
   senderId: number;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'senderId' })
   sender: User;
 
   @Column()
   receiverId: number;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'receiverId' })
   receiver: User;
 

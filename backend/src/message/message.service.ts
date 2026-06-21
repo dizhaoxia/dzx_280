@@ -81,13 +81,21 @@ export class MessageService {
 
     return conversations.map((conv) => {
       const targetId = (conv.participantIds || []).map(Number).find((id) => id !== userId)!;
+      let targetUser = userMap.get(targetId);
+      if (!targetUser) {
+        if (targetId === -1 || targetId === 0) {
+          targetUser = { id: targetId, nickname: '系统通知', avatar: null } as any;
+        } else {
+          targetUser = { id: targetId, nickname: `用户${targetId}`, avatar: null } as any;
+        }
+      }
       return {
         id: conv.id,
         participantIds: (conv.participantIds || []).map(Number),
         lastMessage: conv.lastMessage,
         lastMessageTime: conv.lastMessageTime,
         unreadCount: conv.unreadCounts?.[userId] || 0,
-        targetUser: userMap.get(targetId) || { id: targetId, nickname: null, avatar: null },
+        targetUser,
       };
     });
   }
@@ -254,27 +262,55 @@ export class MessageService {
   }
 
   async sendSystemMessage(senderId: number | null, receiverId: number, content: string) {
-    const conversation = await this.createOrGetConversation(senderId || 0, receiverId).catch(() => null);
-    if (!conversation) return null;
+    try {
+      const targetUser = await this.userRepository.findOne({ where: { id: receiverId } });
+      if (!targetUser) return null;
 
-    const actualSenderId = senderId || 0;
-    const message = this.messageRepository.create({
-      conversationId: conversation.id,
-      senderId: actualSenderId,
-      receiverId: receiverId,
-      type: MessageType.SYSTEM,
-      content: content,
-      isRead: false,
-    });
+      const systemUserId = senderId || -1;
+      const participantIds = [systemUserId, receiverId].sort((a, b) => a - b);
 
-    const savedMessage = await this.messageRepository.save(message);
+      const allConversations = await this.conversationRepository.find();
+      let conversation = allConversations.find((conv) => {
+        const ids = (conv.participantIds || []).map(Number).sort((a, b) => a - b);
+        return (
+          ids.length === 2 &&
+          ids[0] === participantIds[0] &&
+          ids[1] === participantIds[1]
+        );
+      });
 
-    conversation.lastMessage = content;
-    conversation.lastMessageTime = new Date();
-    conversation.unreadCounts = conversation.unreadCounts || {};
-    conversation.unreadCounts[receiverId] = (conversation.unreadCounts[receiverId] || 0) + 1;
-    await this.conversationRepository.save(conversation);
+      if (!conversation) {
+        conversation = this.conversationRepository.create({
+          participantIds,
+          unreadCounts: {
+            [systemUserId]: 0,
+            [receiverId]: 0,
+          },
+        });
+        conversation = await this.conversationRepository.save(conversation);
+      }
 
-    return savedMessage;
+      const message = this.messageRepository.create({
+        conversationId: conversation.id,
+        senderId: systemUserId,
+        receiverId: receiverId,
+        type: MessageType.SYSTEM,
+        content: content,
+        isRead: false,
+      });
+
+      const savedMessage = await this.messageRepository.save(message);
+
+      conversation.lastMessage = content;
+      conversation.lastMessageTime = new Date();
+      conversation.unreadCounts = conversation.unreadCounts || {};
+      conversation.unreadCounts[receiverId] = (conversation.unreadCounts[receiverId] || 0) + 1;
+      await this.conversationRepository.save(conversation);
+
+      return savedMessage;
+    } catch (error) {
+      console.error('[sendSystemMessage] 发送系统消息失败:', error);
+      return null;
+    }
   }
 }

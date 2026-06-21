@@ -340,10 +340,12 @@ async function loadInitialMessages() {
 
 function scrollToBottom() {
   nextTick(() => {
-    if (scrollbarRef.value) {
-      const container = scrollbarRef.value.$el?.querySelector('.n-scrollbar-rail')?.parentNode
-      if (container) {
-        container.scrollTop = container.scrollHeight
+    if (scrollbarRef.value && typeof scrollbarRef.value.scrollTo === 'function') {
+      scrollbarRef.value.scrollTo({ top: 999999, behavior: 'smooth' })
+    } else if (scrollbarRef.value && scrollbarRef.value.$el) {
+      const container = scrollbarRef.value.$el.querySelector?.('.n-scrollbar-rail')?.parentNode
+      if (container && typeof container.scrollTop !== 'undefined') {
+        ;(container as HTMLElement).scrollTop = (container as HTMLElement).scrollHeight
       }
     }
   })

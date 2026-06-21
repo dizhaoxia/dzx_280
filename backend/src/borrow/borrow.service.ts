@@ -256,9 +256,13 @@ export class BorrowService {
 
     const savedRequest = await this.borrowRequestRepository.save(request);
 
-    const notificationContent = `收到新的借用申请：${item.name}`;
-    this.chatGateway.sendSystemMessage(item.ownerId, notificationContent);
-    await this.messageService.sendSystemMessage(null, item.ownerId, notificationContent);
+    try {
+      const notificationContent = `收到新的借用申请：${item.name}`;
+      this.chatGateway.sendSystemMessage(item.ownerId, notificationContent);
+      await this.messageService.sendSystemMessage(null, item.ownerId, notificationContent);
+    } catch (e) {
+      this.logger.error('发送借用申请通知失败', e);
+    }
 
     return this.getBorrowRequestDetail(savedRequest.id, userId);
   }
@@ -417,9 +421,13 @@ export class BorrowService {
         await this.itemRepository.save(request.item);
       }
 
-      const notificationContent = `您的借用申请已通过：${request.item?.name}`;
-      this.chatGateway.sendSystemMessage(request.borrowerId, notificationContent);
-      await this.messageService.sendSystemMessage(null, request.borrowerId, notificationContent);
+      try {
+        const notificationContent = `您的借用申请已通过：${request.item?.name}`;
+        this.chatGateway.sendSystemMessage(request.borrowerId, notificationContent);
+        await this.messageService.sendSystemMessage(null, request.borrowerId, notificationContent);
+      } catch (e) {
+        this.logger.error('发送审批通过通知失败', e);
+      }
 
       return this.getBorrowRecordDetail(savedRecord.id, userId);
     } else if (dto.status === BorrowRequestStatus.REJECTED) {
@@ -427,9 +435,13 @@ export class BorrowService {
       request.rejectReason = dto.rejectReason || '物品暂不可借用';
       await this.borrowRequestRepository.save(request);
 
-      const notificationContent = `您的借用申请被拒绝：${request.item?.name}，原因：${request.rejectReason}`;
-      this.chatGateway.sendSystemMessage(request.borrowerId, notificationContent);
-      await this.messageService.sendSystemMessage(null, request.borrowerId, notificationContent);
+      try {
+        const notificationContent = `您的借用申请被拒绝：${request.item?.name}，原因：${request.rejectReason}`;
+        this.chatGateway.sendSystemMessage(request.borrowerId, notificationContent);
+        await this.messageService.sendSystemMessage(null, request.borrowerId, notificationContent);
+      } catch (e) {
+        this.logger.error('发送审批拒绝通知失败', e);
+      }
 
       return { success: true };
     } else {
@@ -455,9 +467,13 @@ export class BorrowService {
     request.status = BorrowRequestStatus.CANCELLED;
     await this.borrowRequestRepository.save(request);
 
-    const notificationContent = `借用申请已被取消：${request.item?.name}`;
-    this.chatGateway.sendSystemMessage(request.ownerId, notificationContent);
-    await this.messageService.sendSystemMessage(null, request.ownerId, notificationContent);
+    try {
+      const notificationContent = `借用申请已被取消：${request.item?.name}`;
+      this.chatGateway.sendSystemMessage(request.ownerId, notificationContent);
+      await this.messageService.sendSystemMessage(null, request.ownerId, notificationContent);
+    } catch (e) {
+      this.logger.error('发送取消申请通知失败', e);
+    }
 
     return { success: true };
   }
