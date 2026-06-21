@@ -57,15 +57,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useMessage } from 'naive-ui'
 import {
   MdHome,
   MdChatbubbles,
-
   MdPerson,
-
+  MdList,
+  MdMegaphone,
+  MdBusiness,
+  MdPaper,
 } from '@vicons/ionicons4'
 import { useUserStore } from '@/stores/user'
 import { getUnreadCount } from '@/api/message'
@@ -78,33 +80,62 @@ const userStore = useUserStore()
 const collapsed = ref(false)
 const unreadCount = ref(0)
 
-const menuOptions = [
-  {
-    label: '首页',
-    key: '/',
-    icon: () => h(MdHome),
-  },
-  {
-    label: '互助大厅',
-    key: '/help',
-    icon: () => h(MdPerson),
-  },
-  {
-    label: '消息',
-    key: '/messages',
-    icon: () => h(MdChatbubbles),
-  },
-  {
-    label: '公告',
-    key: '/announcements',
-    icon: () => h(MdChatbubbles),
-  },
-  {
-    label: '个人中心',
-    key: '/profile',
-    icon: () => h(MdPerson),
-  },
-]
+const isPropertyOrAdmin = computed(() => {
+  const role = userStore.user?.role
+  return role === 'property' || role === 'admin'
+})
+
+const menuOptions = computed(() => {
+  const base = [
+    {
+      label: '首页',
+      key: '/',
+      icon: () => h(MdHome),
+    },
+    {
+      label: '互助大厅',
+      key: '/help',
+      icon: () => h(MdList),
+    },
+    {
+      label: '消息',
+      key: '/messages',
+      icon: () => h(MdChatbubbles),
+    },
+    {
+      label: '公告',
+      key: '/announcements',
+      icon: () => h(MdMegaphone),
+    },
+    {
+      label: '个人中心',
+      key: '/profile',
+      icon: () => h(MdPerson),
+    },
+  ]
+  if (isPropertyOrAdmin.value) {
+    base.push(
+      {
+        label: '物业后台',
+        key: 'admin',
+        icon: () => h(MdBusiness),
+        children: [
+          {
+            label: '楼栋管理',
+            key: '/admin/buildings',
+            icon: () => h(MdPaper),
+          },
+          {
+            label: '公告管理',
+            key: '/admin/announcements',
+            icon: () => h(MdMegaphone),
+          },
+        ],
+      },
+    )
+  }
+  return base
+})
 
 const userMenuOptions = [
   {
@@ -133,8 +164,10 @@ const activeMenu = computed(() => {
   const path = route.path
   if (path.startsWith('/help')) return '/help'
   if (path.startsWith('/messages')) return '/messages'
-  if (path.startsWith('/announcements')) return '/announcements'
+  if (path.startsWith('/announcements') && !path.startsWith('/admin')) return '/announcements'
   if (path.startsWith('/profile') || path.startsWith('/verify')) return '/profile'
+  if (path.startsWith('/admin/buildings')) return '/admin/buildings'
+  if (path.startsWith('/admin/announcements')) return '/admin/announcements'
   return '/'
 })
 
@@ -161,8 +194,6 @@ function handleUserSelect(key: string) {
 function goMessages() {
   router.push('/messages')
 }
-
-import { h } from 'vue'
 
 let pollTimer: any = null
 

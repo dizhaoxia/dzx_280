@@ -33,9 +33,7 @@ export class MessageService {
 
     const allConversations = await this.conversationRepository.find();
     let conversation = allConversations.find((conv) => {
-      const ids = Array.isArray(conv.participantIds)
-        ? conv.participantIds.map(Number).sort((a, b) => a - b)
-        : [];
+      const ids = (conv.participantIds || []).map(Number).sort((a, b) => a - b);
       return (
         ids.length === 2 &&
         ids[0] === participantIds[0] &&
@@ -66,14 +64,12 @@ export class MessageService {
     });
 
     const conversations = allConversations.filter((conv) => {
-      const ids = Array.isArray(conv.participantIds)
-        ? conv.participantIds.map(Number)
-        : [];
+      const ids = (conv.participantIds || []).map(Number);
       return ids.includes(userId);
     });
 
     const targetUserIds = conversations.map((conv) => {
-      return conv.participantIds.find((id) => id !== userId)!;
+      return (conv.participantIds || []).map(Number).find((id) => id !== userId)!;
     });
 
     const users = await this.userRepository.find({
@@ -84,10 +80,10 @@ export class MessageService {
     const userMap = new Map(users.map((u) => [u.id, u]));
 
     return conversations.map((conv) => {
-      const targetId = conv.participantIds.find((id) => id !== userId)!;
+      const targetId = (conv.participantIds || []).map(Number).find((id) => id !== userId)!;
       return {
         id: conv.id,
-        participantIds: conv.participantIds,
+        participantIds: (conv.participantIds || []).map(Number),
         lastMessage: conv.lastMessage,
         lastMessageTime: conv.lastMessageTime,
         unreadCount: conv.unreadCounts?.[userId] || 0,
@@ -102,7 +98,7 @@ export class MessageService {
       throw new NotFoundException('会话不存在');
     }
 
-    if (!conversation.participantIds.includes(userId)) {
+    if (!((conversation.participantIds || []).map(Number).includes(userId))) {
       throw new ForbiddenException('无权访问该会话');
     }
 
@@ -182,7 +178,7 @@ export class MessageService {
       throw new NotFoundException('会话不存在');
     }
 
-    if (!conversation.participantIds.includes(userId)) {
+    if (!((conversation.participantIds || []).map(Number).includes(userId))) {
       throw new ForbiddenException('无权访问该会话');
     }
 
@@ -205,9 +201,7 @@ export class MessageService {
   async getUnreadCount(userId: number) {
     const allConversations = await this.conversationRepository.find();
     const conversations = allConversations.filter((conv) => {
-      const ids = Array.isArray(conv.participantIds)
-        ? conv.participantIds.map(Number)
-        : [];
+      const ids = (conv.participantIds || []).map(Number);
       return ids.includes(userId);
     });
 

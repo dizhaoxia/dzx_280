@@ -1,5 +1,13 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useMessage } from 'naive-ui'
+let _msg: ReturnType<typeof useMessage> | null = null
+function getMessage() {
+  if (!_msg) {
+    try { _msg = useMessage() } catch { _msg = null }
+  }
+  return _msg
+}
 
 const routes: RouteRecordRaw[] = [
   {
@@ -79,6 +87,18 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/Verify.vue'),
         meta: { title: '实名认证' },
       },
+      {
+        path: 'admin/buildings',
+        name: 'BuildingManage',
+        component: () => import('@/views/BuildingManage.vue'),
+        meta: { title: '楼栋管理', roles: ['property', 'admin'] },
+      },
+      {
+        path: 'admin/announcements',
+        name: 'AnnouncementManage',
+        component: () => import('@/views/AnnouncementManage.vue'),
+        meta: { title: '公告管理', roles: ['property', 'admin'] },
+      },
     ],
   },
 ]
@@ -96,6 +116,14 @@ router.beforeEach((to, from, next) => {
     next({ name: 'Login', query: { redirect: to.fullPath } })
   } else if ((to.name === 'Login' || to.name === 'Register') && userStore.token) {
     next({ name: 'Home' })
+  } else if (to.meta.roles && userStore.user?.role) {
+    const roles = to.meta.roles as string[]
+    if (!roles.includes(userStore.user.role)) {
+      next({ name: 'Home' })
+      getMessage()?.error?.('权限不足')
+    } else {
+      next()
+    }
   } else {
     next()
   }
