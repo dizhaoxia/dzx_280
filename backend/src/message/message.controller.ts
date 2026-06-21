@@ -15,7 +15,7 @@ import { MessageService } from './message.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { User } from '../user/entities/user.entity';
-import { SendMessageDto, GetMessagesDto } from './dto/message.dto';
+import { SendMessageDto, GetMessagesDto, CreateConversationDto } from './dto/message.dto';
 
 @Controller('message')
 @UseGuards(JwtAuthGuard)
@@ -61,5 +61,13 @@ export class MessageController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this.messageService.uploadImage(user.id, file);
+  }
+
+  @Post('conversation')
+  createOrGetConversation(
+    @CurrentUser() user: User,
+    @Body() dto: CreateConversationDto,
+  ) {
+    return this.messageService.createOrGetConversation(user.id, dto.targetUserId);
   }
 }

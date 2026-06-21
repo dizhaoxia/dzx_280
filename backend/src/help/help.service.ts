@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository, Like, In } from 'typeorm';
 import { HelpPost } from './entities/help-post.entity';
 import { CreateHelpPostDto, UpdateHelpPostDto, QueryHelpDto, UpdateHelpStatusDto } from './dto/help.dto';
 
@@ -32,7 +32,13 @@ export class HelpService {
 
     const where: any = {};
     if (type) where.type = type;
-    if (category) where.category = category;
+    if (category) {
+      if (Array.isArray(category)) {
+        where.category = In(category);
+      } else {
+        where.category = category;
+      }
+    }
     if (urgency) where.urgency = urgency;
     if (buildingId) where.buildingId = buildingId;
     if (keyword) {

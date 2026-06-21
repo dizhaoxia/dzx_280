@@ -1,6 +1,8 @@
-import { IsEnum, IsString, IsOptional, IsNumber, Min, IsInt } from 'class-validator';
+import { IsEnum, IsString, IsOptional, IsNumber, Min, IsInt, isEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 import { HelpType, HelpCategory, UrgencyLevel, HelpStatus } from '../entities/help-post.entity';
+import { BadRequestException } from '@nestjs/common';
+import { Transform } from 'class-transformer';
 
 export class CreateHelpPostDto {
   @IsEnum(HelpType)
@@ -73,8 +75,20 @@ export class QueryHelpDto {
   type?: HelpType;
 
   @IsOptional()
-  @IsEnum(HelpCategory)
-  category?: HelpCategory;
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    const values = String(value).split(',').filter(Boolean);
+    const validCategories = Object.values(HelpCategory);
+    for (const v of values) {
+      if (!validCategories.includes(v as HelpCategory)) {
+        throw new BadRequestException(
+          `category must be one of the following values: ${validCategories.join(', ')}`
+        );
+      }
+    }
+    return values as HelpCategory[];
+  })
+  category?: HelpCategory[];
 
   @IsOptional()
   @IsEnum(UrgencyLevel)

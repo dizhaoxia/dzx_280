@@ -25,3 +25,7 @@ export function uploadChatImage(formData: FormData) {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
+
+export function createOrGetConversation(targetUserId: number) {
+  return request.post('/message/conversation', { targetUserId })
+}

@@ -173,6 +173,7 @@ import {
   MdRefresh,
 } from '@vicons/ionicons4'
 import { getHelpDetail, deleteHelp, updateHelpStatus } from '@/api/help'
+import { createOrGetConversation } from '@/api/message'
 import { useUserStore } from '@/stores/user'
 import { HELP_CATEGORIES, HELP_STATUS } from '@/types'
 import type { HelpPost } from '@/types'
@@ -275,13 +276,21 @@ async function handleChangeStatus(status: string) {
   }
 }
 
-function handleContact() {
+async function handleContact() {
   if (!detail.value?.userId) return
-  message.info('正在跳转消息中心...')
-  router.push({
-    path: '/messages',
-    query: { userId: String(detail.value.userId) },
-  })
+  const loadingMsg = message.loading('正在进入聊天...', { duration: 0 })
+  try {
+    const res: any = await createOrGetConversation(detail.value.userId)
+    loadingMsg.destroy()
+    if (res?.id) {
+      router.push(`/messages/${res.id}`)
+    } else {
+      message.error('创建会话失败')
+    }
+  } catch (e: any) {
+    loadingMsg.destroy()
+    message.error(e.message || '创建会话失败')
+  }
 }
 
 function submitComment() {
