@@ -6,7 +6,6 @@
         :model="formValue"
         :rules="rules"
         label-placement="top"
-        @submit="handleSubmit"
       >
         <n-form-item label="手机号" path="phone">
           <n-input v-model:value="formValue.phone" placeholder="请输入手机号" />
@@ -25,13 +24,14 @@
             type="password"
             placeholder="请再次输入密码"
             show-password-on="click"
+            @keyup.enter="handleSubmit"
           />
         </n-form-item>
         <n-form-item label="昵称（可选）" path="nickname">
           <n-input v-model:value="formValue.nickname" placeholder="请输入昵称" />
         </n-form-item>
         <n-form-item>
-          <n-button type="primary" block :loading="loading" html-type="submit">
+          <n-button type="primary" block :loading="loading" @click="handleSubmit">
             注册
           </n-button>
         </n-form-item>
@@ -112,7 +112,8 @@ const rules: FormRules = {
 
 async function handleSubmit() {
   try {
-    await formRef.value?.validate()
+    const valid = await formRef.value?.validate()
+    if (!valid) return
   } catch (e) {
     return
   }
@@ -126,7 +127,9 @@ async function handleSubmit() {
     message.success('注册成功')
     router.push('/')
   } catch (e: any) {
-    message.error(e?.message || '注册失败')
+    console.error('注册错误:', e)
+    const errMsg = e?.message || e?.data?.message || e?.response?.data?.message || '注册失败，请检查后端服务是否启动'
+    message.error(errMsg)
   } finally {
     loading.value = false
   }

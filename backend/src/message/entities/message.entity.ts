@@ -41,9 +41,9 @@ export class Message {
   receiver: User;
 
   @Column({
-    type: 'enum',
-    enum: MessageType,
-    default: MessageType.TEXT,
+    type: 'varchar',
+    length: 20,
+    default: 'text',
   })
   type: MessageType;
 

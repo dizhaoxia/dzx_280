@@ -12,16 +12,13 @@ import { HelpPost } from './help/entities/help-post.entity';
 import { Conversation } from './message/entities/conversation.entity';
 import { Message } from './message/entities/message.entity';
 import { Announcement } from './announcement/entities/announcement.entity';
+import { join } from 'path';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT) || 5432,
-      username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'postgres',
-      database: process.env.DB_DATABASE || 'neighborhood_help',
+      type: 'better-sqlite3',
+      database: join(process.cwd(), 'data.db'),
       entities: [User, Building, HelpPost, Conversation, Message, Announcement],
       synchronize: true,
       logging: false,

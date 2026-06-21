@@ -6,7 +6,6 @@
         :model="formValue"
         :rules="rules"
         label-placement="top"
-        @submit="handleSubmit"
       >
         <n-form-item label="手机号" path="phone">
           <n-input v-model:value="formValue.phone" placeholder="请输入手机号" />
@@ -17,10 +16,11 @@
             type="password"
             placeholder="请输入密码"
             show-password-on="click"
+            @keyup.enter="handleSubmit"
           />
         </n-form-item>
         <n-form-item>
-          <n-button type="primary" block :loading="loading" html-type="submit">
+          <n-button type="primary" block :loading="loading" @click="handleSubmit">
             登录
           </n-button>
         </n-form-item>
@@ -84,7 +84,8 @@ const rules: FormRules = {
 
 async function handleSubmit() {
   try {
-    await formRef.value?.validate()
+    const valid = await formRef.value?.validate()
+    if (!valid) return
   } catch (e) {
     return
   }
@@ -95,7 +96,9 @@ async function handleSubmit() {
     const redirect = (route.query.redirect as string) || '/'
     router.push(redirect)
   } catch (e: any) {
-    message.error(e?.message || '登录失败')
+    console.error('登录错误:', e)
+    const errMsg = e?.message || e?.data?.message || e?.response?.data?.message || '登录失败，请检查后端服务是否启动'
+    message.error(errMsg)
   } finally {
     loading.value = false
   }

@@ -40,16 +40,16 @@ export class User {
   avatar: string;
 
   @Column({
-    type: 'enum',
-    enum: UserRole,
-    default: UserRole.USER,
+    type: 'varchar',
+    length: 20,
+    default: 'user',
   })
   role: UserRole;
 
   @Column({
-    type: 'enum',
-    enum: VerifyStatus,
-    default: VerifyStatus.UNVERIFIED,
+    type: 'varchar',
+    length: 20,
+    default: 'unverified',
   })
   verifyStatus: VerifyStatus;
 

@@ -31,11 +31,17 @@ export class MessageService {
 
     const participantIds = [userId, targetId].sort((a, b) => a - b);
 
-    let conversation = await this.conversationRepository
-      .createQueryBuilder('conversation')
-      .where('conversation.participantIds @> ARRAY[:...ids]::int[]', { ids: participantIds })
-      .andWhere('array_length(conversation.participantIds, 1) = 2')
-      .getOne();
+    const allConversations = await this.conversationRepository.find();
+    let conversation = allConversations.find((conv) => {
+      const ids = Array.isArray(conv.participantIds)
+        ? conv.participantIds.map(Number).sort((a, b) => a - b)
+        : [];
+      return (
+        ids.length === 2 &&
+        ids[0] === participantIds[0] &&
+        ids[1] === participantIds[1]
+      );
+    });
 
     if (!conversation) {
       conversation = this.conversationRepository.create({
@@ -52,12 +58,19 @@ export class MessageService {
   }
 
   async getConversationList(userId: number) {
-    const conversations = await this.conversationRepository
-      .createQueryBuilder('conversation')
-      .where(':userId = ANY(conversation.participantIds)', { userId })
-      .orderBy('conversation.lastMessageTime', 'DESC')
-      .addOrderBy('conversation.createdAt', 'DESC')
-      .getMany();
+    const allConversations = await this.conversationRepository.find({
+      order: {
+        lastMessageTime: 'DESC',
+        createdAt: 'DESC',
+      } as any,
+    });
+
+    const conversations = allConversations.filter((conv) => {
+      const ids = Array.isArray(conv.participantIds)
+        ? conv.participantIds.map(Number)
+        : [];
+      return ids.includes(userId);
+    });
 
     const targetUserIds = conversations.map((conv) => {
       return conv.participantIds.find((id) => id !== userId)!;
@@ -190,10 +203,13 @@ export class MessageService {
   }
 
   async getUnreadCount(userId: number) {
-    const conversations = await this.conversationRepository
-      .createQueryBuilder('conversation')
-      .where(':userId = ANY(conversation.participantIds)', { userId })
-      .getMany();
+    const allConversations = await this.conversationRepository.find();
+    const conversations = allConversations.filter((conv) => {
+      const ids = Array.isArray(conv.participantIds)
+        ? conv.participantIds.map(Number)
+        : [];
+      return ids.includes(userId);
+    });
 
     const total = conversations.reduce((sum, conv) => {
       return sum + (conv.unreadCounts?.[userId] || 0);

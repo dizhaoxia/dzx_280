@@ -27,9 +27,9 @@ export class Announcement {
   content: string;
 
   @Column({
-    type: 'enum',
-    enum: AnnouncementType,
-    default: AnnouncementType.NOTICE,
+    type: 'varchar',
+    length: 20,
+    default: 'notice',
   })
   type: AnnouncementType;
 

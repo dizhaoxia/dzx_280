@@ -13,7 +13,7 @@ export class Conversation {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('int', { array: true })
+  @Column('simple-array')
   participantIds: number[];
 
   @Column({ nullable: true })
@@ -22,7 +22,7 @@ export class Conversation {
   @Column({ nullable: true })
   lastMessageTime: Date;
 
-  @Column('json', { nullable: true })
+  @Column('simple-json', { nullable: true })
   unreadCounts: Record<string, number>;
 
   @OneToMany(() => Message, (msg) => msg.conversation)

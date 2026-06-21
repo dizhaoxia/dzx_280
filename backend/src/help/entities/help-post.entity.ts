@@ -42,8 +42,8 @@ export class HelpPost {
   id: number;
 
   @Column({
-    type: 'enum',
-    enum: HelpType,
+    type: 'varchar',
+    length: 20,
   })
   type: HelpType;
 
@@ -54,15 +54,15 @@ export class HelpPost {
   content: string;
 
   @Column({
-    type: 'enum',
-    enum: HelpCategory,
+    type: 'varchar',
+    length: 30,
   })
   category: HelpCategory;
 
   @Column({
-    type: 'enum',
-    enum: UrgencyLevel,
-    default: UrgencyLevel.NORMAL,
+    type: 'varchar',
+    length: 20,
+    default: 'normal',
   })
   urgency: UrgencyLevel;
 
@@ -77,9 +77,9 @@ export class HelpPost {
   locationDetail: string;
 
   @Column({
-    type: 'enum',
-    enum: HelpStatus,
-    default: HelpStatus.OPEN,
+    type: 'varchar',
+    length: 20,
+    default: 'open',
   })
   status: HelpStatus;
 
