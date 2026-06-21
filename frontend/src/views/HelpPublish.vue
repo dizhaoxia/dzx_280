@@ -202,7 +202,7 @@ async function handleSubmit() {
     const validFiles = fileList.value.filter((f) => f.file)
     for (const fileInfo of validFiles) {
       if (fileInfo.file) {
-        formDataObj.append('files', fileInfo.file)
+        formDataObj.append('images', fileInfo.file)
       }
     }
 

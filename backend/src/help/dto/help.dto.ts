@@ -1,4 +1,5 @@
 import { IsEnum, IsString, IsOptional, IsNumber, Min, IsInt } from 'class-validator';
+import { Type } from 'class-transformer';
 import { HelpType, HelpCategory, UrgencyLevel, HelpStatus } from '../entities/help-post.entity';
 
 export class CreateHelpPostDto {
@@ -18,6 +19,7 @@ export class CreateHelpPostDto {
   urgency: UrgencyLevel;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   buildingId?: number;
 
@@ -52,6 +54,7 @@ export class UpdateHelpPostDto {
   urgency?: UrgencyLevel;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   buildingId?: number;
 
@@ -82,15 +85,18 @@ export class QueryHelpDto {
   keyword?: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   buildingId?: number;
 
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   page?: number = 1;
 
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   pageSize?: number = 10;
